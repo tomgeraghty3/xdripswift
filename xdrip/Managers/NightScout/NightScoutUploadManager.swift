@@ -283,7 +283,6 @@ public class NightScoutUploadManager:NSObject {
     ///     - siteURL : nightscout site url
     ///     - apiKey : nightscout api key
     private func uploadBgReadingsToNightScout(siteURL:String, apiKey:String, lastConnectionStatusChangeTimeStamp: Date?) {
-        
         trace("in uploadBgReadingsToNightScout", log: self.oslog, category: ConstantsLog.categoryNightScoutUploadManager, type: .info)
         
         // get readings to upload, limit to x days, x = ConstantsNightScout.maxDaysToUpload
@@ -299,6 +298,8 @@ public class NightScoutUploadManager:NSObject {
         var bgReadingsToUpload = bgReadingsAccessor.getLatestBgReadings(limit: nil, fromDate: timeStamp, forSensor: nil, ignoreRawData: true, ignoreCalculatedValue: false).filter(minimumTimeBetweenTwoReadingsInMinutes: ConstantsNightScout.minimiumTimeBetweenTwoReadingsInMinutes, lastConnectionStatusChangeTimeStamp: lastConnectionStatusChangeTimeStamp, timeStampLastProcessedBgReading: timeStamp)
         
         if bgReadingsToUpload.count > 0 {
+            debuglogging("Starting NS Upload. Uploading " + bgReadingsToUpload.count.description + " readings")
+
             trace("    number of readings to upload : %{public}@", log: self.oslog, category: ConstantsLog.categoryNightScoutUploadManager, type: .info, bgReadingsToUpload.count.description)
             
             // there's a limit of payload size to upload to NightScout

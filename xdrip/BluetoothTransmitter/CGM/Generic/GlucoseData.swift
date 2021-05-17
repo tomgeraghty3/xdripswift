@@ -6,6 +6,8 @@ public class GlucoseData {
     var timeStamp:Date
 
     var glucoseLevelRaw:Double
+    
+    var rawBeforeArtificialInflation:Double
 
     init(timeStamp:Date, glucoseLevelRaw:Double) {
         
@@ -13,11 +15,12 @@ public class GlucoseData {
         
         self.glucoseLevelRaw = glucoseLevelRaw
         
+        self.rawBeforeArtificialInflation = glucoseLevelRaw
     }
 
     var description: String {
         
-        return "timeStamp = " + timeStamp.description(with: .current) + ", glucoseLevelRaw = " + glucoseLevelRaw.description
+        return "timeStamp = " + timeStamp.description(with: .current) + ", glucoseLevelRaw = " + glucoseLevelRaw.description + " (from rawBefore = " + rawBeforeArtificialInflation.description + ")"
         
     }
     

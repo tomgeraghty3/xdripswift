@@ -1,6 +1,6 @@
 "presnooze" = "Snooze";
 "sensor" = "Sensor";
-"calibrate" = "Calibrate";
+"calibrate" = "Cal";
 "statusactiontitle" = "Status";
 "scanbluetoothdeviceactiontitle" = "Scan for Transmitter";
 "forgetbluetoothdeviceactiontitle" = "Forget Transmitter";

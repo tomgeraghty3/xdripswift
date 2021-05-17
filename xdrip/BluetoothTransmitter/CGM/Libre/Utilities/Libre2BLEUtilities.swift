@@ -101,6 +101,8 @@ class Libre2BLEUtilities {
     ///     - sensor time in minutes
     public static func parseBLEData( _ data: Data, libre1DerivedAlgorithmParameters : Libre1DerivedAlgorithmParameters?) -> (bleGlucose: [GlucoseData], sensorTimeInMinutes: UInt16) {
         
+        debuglogging("STARTING PARSE");
+        
         // how many values to store in rawGlucoseValues, which is not equal to the amount of values read
         // because Libre 2 gives reading every 2 minutes, then 15
         let amountOfValuesToStore = 8
@@ -185,7 +187,10 @@ class Libre2BLEUtilities {
             if first.glucoseLevelRaw == 0.0 {
                 return ([GlucoseData](), wearTimeMinutes)
             }
+            
+                debuglogging("FIRST IS : " + first.description);
         }
+        
         
         // smooth, if required
         if UserDefaults.standard.smoothLibreValues {
@@ -198,6 +203,34 @@ class Libre2BLEUtilities {
         // there's still possibly 0 values, eg first or last
         // filter out readings with glucoseLevelRaw = 0, if any
         bleGlucose = bleGlucose.filter({return $0.glucoseLevelRaw > 0.0})
+        
+        
+        let adjustmentValue = UserDefaults.standard.adjustmentFactor;
+        let adjustmentInMg = adjustmentValue * 18;
+        debuglogging("The value to in/deflate the reading by is: " + adjustmentValue.description + " - in mg/dl this is: " + adjustmentInMg.description);
+        for (index, _) in bleGlucose.enumerated() {
+            if (bleGlucose[index].glucoseLevelRaw > 0) {
+                debuglogging("Before: " + bleGlucose[index].description);
+                let before = bleGlucose[index].glucoseLevelRaw;
+                
+                let newVal = before + adjustmentInMg;
+                bleGlucose[index].glucoseLevelRaw = newVal;
+                bleGlucose[index].rawBeforeArtificialInflation = before;
+                debuglogging("After: " + bleGlucose[index].description);
+            } else {
+                bleGlucose[index].rawBeforeArtificialInflation = 0;
+            }
+        }
+//        if let first = bleGlucose.first {
+//            debuglogging("First after smooth is: " + first.description);
+//
+//            let newVal = bleGlucose[0].glucoseLevelRaw - 30;
+//            bleGlucose[0].glucoseLevelRaw = newVal;
+//        }
+//
+//        if let first = bleGlucose.first {
+//            debuglogging("First after my changes is: " + first.description);
+//        }
 
         return (bleGlucose, wearTimeMinutes)
         

@@ -95,7 +95,7 @@ class NightScoutFollowManager:NSObject {
         
         // create new bgReading
         // using sgv as value for rawData because in some case these values are not available in NightScout
-        let bgReading = BgReading(timeStamp: followGlucoseData.timeStamp, sensor: nil, calibration: nil, rawData: followGlucoseData.sgv, deviceName: nil, nsManagedObjectContext: coreDataManager.mainManagedObjectContext)
+        let bgReading = BgReading(timeStamp: followGlucoseData.timeStamp, sensor: nil, calibration: nil, rawData: followGlucoseData.sgv, rawUnadjust: followGlucoseData.sgv, deviceName: nil, nsManagedObjectContext: coreDataManager.mainManagedObjectContext)
 
         // set calculatedValue
         bgReading.calculatedValue = followGlucoseData.sgv

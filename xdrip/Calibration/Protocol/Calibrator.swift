@@ -36,7 +36,7 @@ protocol Calibrator {
     ///     - lastCalibration : result of call to Calibrations.lastCalibrationForActiveSensor
     /// - returns:
     ///     - the created bgreading
-    func createNewBgReading(rawData:Double, timeStamp:Date?, sensor:Sensor?, last3Readings:inout Array<BgReading>, lastCalibrationsForActiveSensorInLastXDays:inout Array<Calibration>, firstCalibration:Calibration?, lastCalibration:Calibration?, deviceName:String?,  nsManagedObjectContext:NSManagedObjectContext ) -> BgReading
+    func createNewBgReading(rawData:Double, rawUnadjust:Double, timeStamp:Date?, sensor:Sensor?, last3Readings:inout Array<BgReading>, lastCalibrationsForActiveSensorInLastXDays:inout Array<Calibration>, firstCalibration:Calibration?, lastCalibration:Calibration?, deviceName:String?,  nsManagedObjectContext:NSManagedObjectContext ) -> BgReading
     
     /// creates a calibration, stored in the database, but context not saved. Also readings will be adpated, also not saved.
     /// - parameters:
@@ -126,7 +126,7 @@ extension Calibrator {
     ///     - lastCalibration : result of call to Calibrations.lastCalibrationForActiveSensor
     /// - returns:
     ///     - the created bgreading
-    func createNewBgReading(rawData:Double, timeStamp:Date?, sensor:Sensor?, last3Readings:inout Array<BgReading>, lastCalibrationsForActiveSensorInLastXDays:inout Array<Calibration>, firstCalibration:Calibration?, lastCalibration:Calibration?, deviceName:String?, nsManagedObjectContext:NSManagedObjectContext ) -> BgReading {
+    func createNewBgReading(rawData:Double, rawUnadjust:Double, timeStamp:Date?, sensor:Sensor?, last3Readings:inout Array<BgReading>, lastCalibrationsForActiveSensorInLastXDays:inout Array<Calibration>, firstCalibration:Calibration?, lastCalibration:Calibration?, deviceName:String?, nsManagedObjectContext:NSManagedObjectContext ) -> BgReading {
         
         var timeStampToUse:Date = Date()
         if let timeStamp = timeStamp {
@@ -138,6 +138,7 @@ extension Calibrator {
             sensor:sensor,
             calibration:lastCalibration,
             rawData:rawData / rawValueDivider,
+            rawUnadjust: rawUnadjust / rawValueDivider,
             deviceName:deviceName,
             nsManagedObjectContext:nsManagedObjectContext
         )

@@ -58,6 +58,10 @@ class Texts_SettingsView {
         return NSLocalizedString("settingsviews_useobjectives", tableName: filename, bundle: Bundle.main, value: "Show Objectives in Graph?", comment: "home screen settings, use objectives in graph")
     }()
 
+    static let labelAdjustmentValue: String = {
+        return NSLocalizedString("settingsviews_adjustmentValue", tableName: filename, bundle: Bundle.main, value: "Adjustment Value (in mmol):", comment: "home screen settings, adjustment value")
+    }()
+    
     static let labelUrgentHighValue: String = {
         return NSLocalizedString("settingsviews_urgentHighValue", tableName: filename, bundle: Bundle.main, value: "Urgent High Value:", comment: "home screen settings, urgent high value")
     }()

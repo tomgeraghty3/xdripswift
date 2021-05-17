@@ -11,6 +11,8 @@ import PieCharts
 /// viewcontroller for the home screen
 final class RootViewController: UIViewController {
     
+    private var prevAdjustmentText = "";
+    
     // MARK: - Properties - Outlets and Actions for buttons and labels in home screen
     
     @IBOutlet weak var calibrateButtonOutlet: UIButton!
@@ -46,6 +48,10 @@ final class RootViewController: UIViewController {
     
     /// outlet for label that shows how many minutes ago and so on
     @IBOutlet weak var minutesLabelOutlet: UILabel!
+    
+    /// outlet for label that shows how many minutes ago and so on
+    @IBOutlet weak var minutesLabelOutlet2: UILabel!
+    
     
     /// outlet for label that shows difference with previous reading
     @IBOutlet weak var diffLabelOutlet: UILabel!
@@ -148,9 +154,10 @@ final class RootViewController: UIViewController {
                     
                     // set value to value of latest chartPoint
                     self.valueLabelOutlet.text = lastChartPointEarlierThanEndDate.y.scalar.bgValuetoString(mgdl: UserDefaults.standard.bloodGlucoseUnitIsMgDl)
-                    
+
                     // set timestamp to timestamp of latest chartPoint, in red so user can notice this is an old value
                     self.minutesLabelOutlet.text =  self.dateTimeFormatterForMinutesLabelWhenPanning.string(from: chartAxisValueDate.date)
+                    self.minutesLabelOutlet2.text = "";
                     self.minutesLabelOutlet.textColor = UIColor.red
                     self.valueLabelOutlet.textColor = UIColor.lightGray
                     
@@ -779,7 +786,6 @@ final class RootViewController: UIViewController {
     ///     - glucoseData : array with new readings
     ///     - sensorTimeInMinutes : should be present only if it's the first reading(s) being processed for a specific sensor and is needed if it's a transmitterType that returns true to the function canDetectNewSensor
     private func processNewGlucoseData(glucoseData: inout [GlucoseData], sensorTimeInMinutes: Int?) {
-        
         // unwrap calibrationsAccessor and coreDataManager and cgmTransmitter
         guard let calibrationsAccessor = calibrationsAccessor, let coreDataManager = coreDataManager, let cgmTransmitter = bluetoothPeripheralManager?.getCGMTransmitter() else {
             
@@ -936,9 +942,9 @@ final class RootViewController: UIViewController {
                         // get latest3BgReadings
                         var latest3BgReadings = bgReadingsAccessor.getLatestBgReadings(limit: 3, howOld: nil, forSensor: activeSensor, ignoreRawData: false, ignoreCalculatedValue: false)
                         
-                        let newReading = calibrator.createNewBgReading(rawData: glucose.glucoseLevelRaw, timeStamp: glucose.timeStamp, sensor: activeSensor, last3Readings: &latest3BgReadings, lastCalibrationsForActiveSensorInLastXDays: &lastCalibrationsForActiveSensorInLastXDays, firstCalibration: firstCalibrationForActiveSensor, lastCalibration: lastCalibrationForActiveSensor, deviceName: self.getCGMTransmitterDeviceName(for: cgmTransmitter), nsManagedObjectContext: coreDataManager.mainManagedObjectContext)
+                        let newReading = calibrator.createNewBgReading(rawData: glucose.glucoseLevelRaw, rawUnadjust: glucose.rawBeforeArtificialInflation, timeStamp: glucose.timeStamp, sensor: activeSensor, last3Readings: &latest3BgReadings, lastCalibrationsForActiveSensorInLastXDays: &lastCalibrationsForActiveSensorInLastXDays, firstCalibration: firstCalibrationForActiveSensor, lastCalibration: lastCalibrationForActiveSensor, deviceName: self.getCGMTransmitterDeviceName(for: cgmTransmitter), nsManagedObjectContext: coreDataManager.mainManagedObjectContext)
                         
-                        if UserDefaults.standard.addDebugLevelLogsInTraceFileAndNSLog {
+                         if UserDefaults.standard.addDebugLevelLogsInTraceFileAndNSLog {
                             
                             trace("new reading created, timestamp = %{public}@, calculatedValue = %{public}@", log: self.log, category: ConstantsLog.categoryRootView, type: .info, newReading.timeStamp.description(with: .current), newReading.calculatedValue.description.replacingOccurrences(of: ".", with: ","))
                             
@@ -949,6 +955,23 @@ final class RootViewController: UIViewController {
                         
                         // a new reading was created
                         newReadingCreated = true
+                        
+                        if (glucose === glucoseData[0]) {
+                            
+                            var textToSet = "";
+                            if (glucose.glucoseLevelRaw == glucose.rawBeforeArtificialInflation) {
+                                textToSet = "No adjustment applied"
+                            } else {
+                                let mmol = (glucose.glucoseLevelRaw / 18);
+                                debuglogging("Found latest: " + glucose.description + " (" + mmol.description + "). Updating inflation row UI")
+                                var prevValue = glucose.rawBeforeArtificialInflation / 18.0;
+                                prevValue = prevValue.round(toDecimalPlaces: 1);
+                                textToSet = "Adj from: " + prevValue.description;
+                            }
+                            
+                            minutesLabelOutlet2.text = textToSet;
+                            prevAdjustmentText = textToSet;
+                        }
                         
                         // set timeStampLastBgReading to new timestamp
                         timeStampLastBgReading = glucose.timeStamp
@@ -1581,6 +1604,8 @@ final class RootViewController: UIViewController {
     ///     - overrideApplicationState : if true, then update will be done even if state is not .active
     @objc private func updateLabelsAndChart(overrideApplicationState: Bool = false) {
         
+        minutesLabelOutlet2.text = prevAdjustmentText;
+        
         // if glucoseChartManager not nil, then check if panned backward and if so then don't update the chart
         if let glucoseChartManager = glucoseChartManager  {
             // check that app is in foreground, but only if overrideApplicationState = false
@@ -1601,7 +1626,6 @@ final class RootViewController: UIViewController {
         
         // if there's no readings, then give empty fields and make sure the text isn't styled with strikethrough
         guard latestReadings.count > 0 else {
-            
             valueLabelOutlet.textColor = UIColor.darkGray
             minutesLabelOutlet.text = ""
             diffLabelOutlet.text = ""
@@ -1616,6 +1640,7 @@ final class RootViewController: UIViewController {
         
         // assign last reading
         let lastReading = latestReadings[0]
+
         
         // assign last but one reading
         let lastButOneReading = latestReadings.count > 1 ? latestReadings[1]:nil
@@ -1666,12 +1691,30 @@ final class RootViewController: UIViewController {
         
         // get minutes ago and create text for minutes ago label
         let minutesAgo = -Int(lastReading.timeStamp.timeIntervalSinceNow) / 60
-        let minutesAgoText = minutesAgo.description + " " + (minutesAgo == 1 ? Texts_Common.minute:Texts_Common.minutes) + " " + Texts_HomeView.ago
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone.current
+        formatter.dateFormat = "hh:mm"
+        let dateString = formatter.string(from: lastReading.timeStamp)
+        
+        let minutesAgoText = minutesAgo.description + " " + (minutesAgo == 1 ? Texts_Common.minute:Texts_Common.minutes) + " " + Texts_HomeView.ago + " (@ " + dateString + ")"
         
         minutesLabelOutlet.text = minutesAgoText
         
         // create delta text
-        diffLabelOutlet.text = lastReading.unitizedDeltaString(previousBgReading: lastButOneReading, showUnit: true, highGranularity: true, mgdl: UserDefaults.standard.bloodGlucoseUnitIsMgDl)
+        let deltaText = lastReading.unitizedDeltaString(previousBgReading: lastButOneReading, showUnit: true, highGranularity: true, mgdl: UserDefaults.standard.bloodGlucoseUnitIsMgDl);
+        diffLabelOutlet.text = deltaText;
+        let lastButOneRaw = lastButOneReading?.rawData ?? 0;
+        let lastButOneMmol = lastButOneRaw / 18;
+        let lastButOneStr = lastButOneMmol == 0 ? "[missing]" : lastButOneMmol.description;
+        let lastButOneTime = lastButOneReading?.timeStamp ?? nil;
+        let lastButOneTimeStr = lastButOneTime?.description ?? "[missing]";
+        
+        let last = lastReading.rawData / 18;
+        let lastStr = last.description;
+        let lastTimeStr = lastReading.timeStamp.description;
+        let compareLast = "Created delta comparing last " + lastStr + " (" + lastTimeStr + ") ";
+        let lastButOne = "to " + lastButOneStr + " (" + lastButOneTimeStr + ") ";
+        debuglogging(compareLast + lastButOne + " resulted in " + deltaText)
         
         // update the chart up to now
         updateChartWithResetEndDate()

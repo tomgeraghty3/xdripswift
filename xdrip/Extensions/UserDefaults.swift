@@ -19,6 +19,8 @@ extension UserDefaults {
     public enum Key: String {
         // User configurable Settings
         
+        case adjustmentFactor = "adjustmentFactor"
+        
         // General
         
         /// bloodglucose  unit
@@ -280,6 +282,34 @@ extension UserDefaults {
     }
     
     // MARK: - =====  User Configurable Settings ======
+      
+    
+    /// true if device is master, false if follower
+    @objc dynamic var adjustmentFactor: Double {
+        get {
+            return double(forKey: Key.adjustmentFactor.rawValue)
+        }
+        set {
+            set(newValue, forKey: Key.adjustmentFactor.rawValue)
+        }
+    }
+   
+    
+    /// the urgenthighmarkvalue in unit selected by user ie, mgdl or mmol - rounded
+    @objc dynamic var adjustmentValueRounded:String {
+        get {
+            return adjustmentFactor.description;
+        }
+        set {
+            let value = newValue.toDouble()
+            set(value, forKey: Key.adjustmentFactor.rawValue)
+
+        }
+    }
+    
+    
+    
+    
     
     // MARK: General
     
@@ -308,6 +338,9 @@ extension UserDefaults {
             set(!newValue, forKey: Key.isMaster.rawValue)
         }
     }
+    
+    
+    
     
     /// should notification be shown with reading yes or no
     @objc dynamic var showReadingInNotification: Bool {

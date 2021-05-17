@@ -10,26 +10,29 @@ import UIKit
 
 fileprivate enum Setting:Int, CaseIterable {
     
+    //adjustment factor
+    case adjustmentFactor = 0
+    
     //urgent high value
-    case urgentHighMarkValue = 0
+    case urgentHighMarkValue = 1
     
     //high value
-    case highMarkValue = 1
+    case highMarkValue = 2
     
     //low value
-    case lowMarkValue = 2
+    case lowMarkValue = 3
     
     //urgent low value
-    case urgentLowMarkValue = 3
+    case urgentLowMarkValue = 4
     
     //use objectives in graph?
-    case useObjectives = 4
+    case useObjectives = 5
     
     //show target line?
-    case showTarget = 5
+    case showTarget = 6
     
     //target value
-    case targetMarkValue = 6
+    case targetMarkValue = 7
     
 }
 
@@ -48,7 +51,7 @@ struct SettingsViewHomeScreenSettingsViewModel:SettingsViewModelProtocol {
         case .showTarget :
             return UISwitch(isOn: UserDefaults.standard.showTarget, action: {(isOn:Bool) in UserDefaults.standard.showTarget = isOn})
             
-        case  .urgentHighMarkValue, .highMarkValue, .targetMarkValue, .lowMarkValue, .urgentLowMarkValue:
+        case  .adjustmentFactor, .urgentHighMarkValue, .highMarkValue, .targetMarkValue, .lowMarkValue, .urgentLowMarkValue:
             return nil
             
         }
@@ -75,6 +78,10 @@ struct SettingsViewHomeScreenSettingsViewModel:SettingsViewModelProtocol {
         guard let setting = Setting(rawValue: index) else { fatalError("Unexpected Section") }
         
         switch setting {
+        
+        case .adjustmentFactor:
+            return SettingsSelectedRowAction.askText(title: Texts_SettingsView.labelAdjustmentValue, message: nil, keyboardType: .decimalPad, text: UserDefaults.standard.adjustmentValueRounded, placeHolder: "0", actionTitle: nil, cancelTitle: nil, actionHandler: {(adjustmentFactor:String) in UserDefaults.standard.adjustmentValueRounded = adjustmentFactor}, cancelHandler: nil, inputValidator: nil)
+
                 
             case .urgentHighMarkValue:
                 return SettingsSelectedRowAction.askText(title: Texts_SettingsView.labelUrgentHighValue, message: nil, keyboardType: UserDefaults.standard.bloodGlucoseUnitIsMgDl ? .numberPad:.decimalPad, text: UserDefaults.standard.urgentHighMarkValueInUserChosenUnitRounded, placeHolder: ConstantsBGGraphBuilder.defaultUrgentHighMarkInMgdl.description, actionTitle: nil, cancelTitle: nil, actionHandler: {(urgentHighMarkValue:String) in UserDefaults.standard.urgentHighMarkValueInUserChosenUnitRounded = urgentHighMarkValue}, cancelHandler: nil, inputValidator: nil)
@@ -131,6 +138,9 @@ struct SettingsViewHomeScreenSettingsViewModel:SettingsViewModelProtocol {
         guard let setting = Setting(rawValue: index) else { fatalError("Unexpected Section") }
 
         switch setting {
+        
+        case .adjustmentFactor:
+            return Texts_SettingsView.labelAdjustmentValue
                 
             case .urgentHighMarkValue:
                 return Texts_SettingsView.labelUrgentHighValue
@@ -159,6 +169,9 @@ struct SettingsViewHomeScreenSettingsViewModel:SettingsViewModelProtocol {
         guard let setting = Setting(rawValue: index) else { fatalError("Unexpected Section") }
         
         switch setting {
+        case .adjustmentFactor:
+            return UITableViewCell.AccessoryType.disclosureIndicator
+
             
         case .urgentHighMarkValue:
             return UITableViewCell.AccessoryType.disclosureIndicator
@@ -188,7 +201,11 @@ struct SettingsViewHomeScreenSettingsViewModel:SettingsViewModelProtocol {
         guard let setting = Setting(rawValue: index) else { fatalError("Unexpected Section") }
 
         switch setting {
-            
+        
+        case .adjustmentFactor:
+            return UserDefaults.standard.adjustmentFactor.bgValuetoString(mgdl: UserDefaults.standard.bloodGlucoseUnitIsMgDl)
+
+                    
         case .urgentHighMarkValue:
             return UserDefaults.standard.urgentHighMarkValueInUserChosenUnit.bgValuetoString(mgdl: UserDefaults.standard.bloodGlucoseUnitIsMgDl)
                 

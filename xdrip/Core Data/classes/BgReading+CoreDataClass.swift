@@ -4,6 +4,8 @@ import UIKit
 
 public class BgReading: NSManagedObject {
 
+    
+    public var rawUnadjust: Double = 0;
     /// creates BgReading with given parameters.
     ///
     /// properties that are not in the parameter list get either value 0 or false (depending on type). id gets new value
@@ -12,6 +14,7 @@ public class BgReading: NSManagedObject {
         sensor:Sensor?,
         calibration:Calibration?,
         rawData:Double,
+        rawUnadjust:Double,
         deviceName:String?,
         nsManagedObjectContext:NSManagedObjectContext
     ) {
@@ -21,6 +24,7 @@ public class BgReading: NSManagedObject {
         self.sensor = sensor
         self.calibration = calibration
         self.rawData = rawData
+        self.rawUnadjust = rawUnadjust;
         self.deviceName = deviceName
         
         ageAdjustedRawValue = 0
@@ -59,6 +63,7 @@ public class BgReading: NSManagedObject {
         r += "\n" + indentation + "hideSlope = " + hideSlope.description
         r += "\n" + indentation + "ra = " + ra.description
         r += "\n" + indentation + "rawData = " + rawData.description
+        r += "\n" + indentation + "rawUnAdjust = " + rawUnadjust.description
         r += "\n" + indentation + "rb = " + rb.description
         r += "\n" + indentation + "rc = " + rc.description
         if let sensor = sensor {
